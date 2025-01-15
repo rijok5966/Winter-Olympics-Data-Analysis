@@ -1,0 +1,353 @@
+---
+title: "Untitled"
+author: "Rijo"
+date: '2022-10-19'
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+getwd()  # Get the current working directory 
+setwd('C:/Users/akila/Documents/DS_Masters_R/Foundations for Data Science/FODS_Capstone Datasets/')  # Set the working directory 
+RStudio.Version()  # to check for the current version of the RStudio
+``` 
+
+# Import the requiredLibraries
+```{r}
+# Load the required libraries
+#install.packages("tidyverse")
+#install.packages("dplyr")
+#install.packages("ggplot2")
+#install.packages("Hmisc")
+#install.packages("tm")
+#install.packages("lsa")
+
+#install.packages("treemapify")
+#install.packages("patchwork")
+library(dplyr)
+library(ggplot2)
+library(cluster)
+library(Hmisc)
+library(ggplot2)
+library(tidyverse)
+library(treemapify)
+library(patchwork)
+```
+### WINTER OLYMPICS
+
+```{r}
+# Load the data
+olympics_data = read.csv('athlete_events.csv')
+#View((olympics_data))
+
+# Filter only by Winter season
+
+winter_subset = filter(olympics_data, Season == 'Winter')
+View(winter_subset)   # View the data
+str(winter_subset)    # structure of the data 
+class(winter_subset)  # class of the data
+is.na(winter_subset)  # Check for missing values
+colSums(is.na(winter_subset))  # Count the number of missing values per column
+which(colSums(is.na(winter_subset))>0) # Identify the position of the columns with atleast one missing value
+names(which(colSums(is.na(olympics_data))>0))  # Return the column names with missing values
+
+```
+# LIMITATIONS - Winter Subset: 
+The original dataset consists of 48564 obs and 15 variables.
+The dataset was filtered considering the question in hand. The Winter subset had the following number missing data
+
+"Age"  "Height" "Weight" "Medal" 
+ 285   8314      9021    42869 
+
+ 
+# Remove the following columns : 
+ i. 'Games' :   The Year and Season column will be used as it is the same data but split into sepearte columns for the ease of analysis
+ ii. 'Team' as it has duplicated names for different athletes from the same countries.
+ example. Switzerland-1 and Switzerland-2 for Switzerland. The team name has a substitute column 'NOC' which helps in identifying each participating country uniquely.
+```{r}
+# Remove column 'Team' and 'Games'
+selected_winter_variables = select(winter_subset , -(Team),-(Games))
+View(selected_winter_variables)
+str(selected_winter_variables)
+
+```
+# Since 88.27% (42869)of the values are missing in the Medal columns, we filter the data further by Medals
+```{r}
+
+# Filtering the Winter subset with Medal
+winter_subset_2 = filter(selected_winter_variables, (Season == 'Winter' & Medal %in% c('Gold','Silver','Bronze')))
+str(winter_subset_2)
+
+# Count the number of missing values per column
+colSums(is.na(winter_subset_2))
+# Return the column names with missing values
+names(which(colSums(is.na(winter_subset_2))>0))
+
+#View(winter_subset_2)
+summary(winter_subset_2) 
+```
+# IMPUTING MISSING VALUES USING UNIVARIATE IMPUTATION
+
+```{r}
+
+## BEFORE IMPUTATION
+
+# Check if the variables are  normally distributed or not, before proceeding with mean or median
+summary(winter_subset_2$Age)
+summary(winter_subset_2$Height)
+summary(winter_subset_2$Weight)
+
+# GGPLOT RESULTS - Before Imputation
+
+ggplot(data = winter_subset_2, mapping = aes(Age)) + geom_histogram(bins = 40, colour = "black") + ggtitle('Age - Before Imputation')
+ggplot(data = winter_subset_2, mapping = aes(Height)) + geom_histogram(bins = 40, colour = "black") + ggtitle('Height - Before Imputation')
+ggplot(data = winter_subset_2, mapping = aes(Weight)) + geom_histogram(bins = 40, colour = "black")+ ggtitle('Weight - Before Imputation')
+
+
+# Apply Univariate Imputation on AGE, HEIGHT and WEIGHT
+winter_subset_2$Age = impute(winter_subset_2$Age , fun = mean)
+winter_subset_2$Height = impute(winter_subset_2$Height , fun = mean)
+winter_subset_2$Weight = impute(winter_subset_2$Weight , fun = mean)
+
+### After Imputation results
+
+summary(winter_subset_2$Age)
+summary(winter_subset_2$Height)
+summary(winter_subset_2$Weight)
+
+# GGPLOT RESULTS - After Imputation
+ggplot(data = winter_subset_2, mapping = aes(Age)) + geom_histogram(bins = 40, colour = "green") + ggtitle('Age - After Imputation')
+ggplot(data = winter_subset_2, mapping = aes(Height)) + geom_histogram(bins = 40, colour = "green") + ggtitle('Height - After Imputation')
+ggplot(data = winter_subset_2, mapping = aes(Weight)) + geom_histogram(bins = 40, colour = "blue") + ggtitle('Weight - After Imputation')
+
+
+```
+
+
+# BEFORE IMPUTATION
+summary(winter_subset_2$Age)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+  13.00   23.00   26.00   26.06   29.00   58.00      11 
+summary(winter_subset_2$Height)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+  145.0   169.0   176.0   175.5   182.0   201.0     721 
+summary(winter_subset_2$Weight)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+  36.00   63.00   72.00   72.81   82.00  130.00     837 
+
+# AFTER IMPUTATION
+summary(winter_subset_2$Age)
+
+ 11 values imputed to 26.06369 
+
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  13.00   23.00   26.00   26.06   29.00   58.00 
+summary(winter_subset_2$Height)
+
+ 721 values imputed to 175.5396 
+
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  145.0   170.0   175.5   175.5   181.0   201.0 
+
+summary(winter_subset_2$Weight)
+
+ 837 values imputed to 72.80795 
+
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  36.00   65.00   72.81   72.81   80.00  130.00 
+## The data is now cleaned and has no missing values.
+
+# Variable Type Conversion
+```{r}
+# 1. Medal: Character -> Oridnal Factor ( Gold, Silver, Bronze)
+# 2. Sex : Character -> Nominal Factor
+
+
+#1. Convert Medal to Ordinal Factor
+winter_subset_2$Medal = factor(winter_subset_2$Medal, levels = c('Bronze','Silver','Gold'), ordered = TRUE)
+
+levels(winter_subset_2$Medal)
+
+
+# 2. Sex : Character to Nominal Factor
+winter_subset_2$Sex = factor(winter_subset_2$Sex , levels = c("M","F"))
+levels(winter_subset_2$Sex)
+
+str(winter_subset_2)  # View structure of the data after type conversion
+
+```
+
+# Arranging the data from the beginning of the Olympics till date.
+```{r}
+# sorting the data to check when was the 1st Winter Olympics held
+winter_subset_2 = arrange(winter_subset_2, Year)  
+View(winter_subset_2)
+str(winter_subset_2)
+```
+
+
+### COUNTRY PERFORMANCE ANALYSIS BETWEEN 20TH CENTURY AND 21st CENTURY
+```{r}
+summarize = dplyr::summarize  # Initialize the summarize function from the dplyr package to be used for summarizing the data.
+
+# Total Medal Count
+tapply(winter_subset_2$Medal, winter_subset_2$Medal , length)
+
+# 20th Century 
+twentieth_century = winter_subset_2 %>% filter(Year > 1900 & Year < 2000)  # Filter the winter season by the 20th century
+#View(twentieth_century)  
+str(twentieth_century)
+
+
+# Distinct medals in the 20th century by NOC(Country) 
+
+gold_20th_century = twentieth_century[twentieth_century$Medal == 'Gold' , c(1:13)] # GOLD
+silver_20th_century = twentieth_century[twentieth_century$Medal == 'Silver' , c(1:13)]  # Silver 
+bronze_20th_century = twentieth_century[twentieth_century$Medal == 'Bronze' , c(1:13)] # Bronze
+
+
+## Gold Medal by countries
+
+# 1.Medal Count by Countries - 20th century
+
+gold_medal_by_countries_20th = gold_20th_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+gold_medal_by_countries_20th
+
+silver_medal_by_countries_20th = silver_20th_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+silver_medal_by_countries_20th
+
+bronze_medal_by_countries_20th = bronze_20th_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+bronze_medal_by_countries_20th
+
+## GGPLOT for Gold , Silver and Bronze Medals
+
+# 1. Gold
+fig_1 = ggplot(data = head(gold_medal_by_countries_20th,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 1924-1998 : Gold Medals - Top 5 Countries") + labs( x = 'Gold Medals' ,y = 'Countries')
+
+# 2. Silver
+fig_2 = ggplot(data = head(silver_medal_by_countries_20th,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 1924-1998 : Silver Medals - Top 5 Countries") + labs( x = 'Silver Medals' ,y = 'Countries')
+
+# 3, Bronze
+fig_3 = ggplot(data = head(bronze_medal_by_countries_20th,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 1924-1998 : Bronze Medals - Top 5 Countries") + labs( x = 'Bronze Medals' ,y = 'Countries')
+
+# Combine the plots using patchwork()
+fig_1 | fig_2 | fig_3
+
+
+########################################################################################
+
+
+# Twenty First Century
+twenty_first_century  = winter_subset_2 %>% filter(Year >= 2000)  # Filter the winter season by the 21st century
+View(twenty_first_century)
+str(twenty_first_century)
+
+
+# Distinct medals in the 21st century by NOC(Country) 
+
+gold_21st_century = twenty_first_century[twenty_first_century$Medal == 'Gold' , c(1:13)] # GOLD
+silver_21st_century = twenty_first_century[twenty_first_century$Medal == 'Silver' , c(1:13)]  # Silver 
+bronze_21st_century = twenty_first_century[twenty_first_century$Medal == 'Bronze' , c(1:13)] # Bronze
+
+# 1.Medal Count by Countries - 20th century
+
+#1. Gold 
+gold_medal_by_countries_21st = gold_21st_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+gold_medal_by_countries_21st
+
+#2. Silver
+silver_medal_by_countries_21st = silver_21st_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+silver_medal_by_countries_21st
+
+#3. Bronze
+bronze_medal_by_countries_21st = bronze_21st_century %>% group_by(NOC) %>% summarize(Country = n()) %>% arrange(desc(Country))
+bronze_medal_by_countries_21st
+
+
+## GGPLOT's for Gold, Silver , Bronze - 20th Century
+
+#1. GGPLOT - Countries by Gold
+fig_4 = ggplot(data = head(gold_medal_by_countries_21st,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 2002 - 2014 : Gold Medals - Top 5 Countries") + labs( x = 'Gold Medals' ,y = 'Countries')
+
+
+#2. GGPLOT - Countries by Silver
+
+fig_5 = ggplot(data = head(silver_medal_by_countries_21st,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 2002 - 2014 : Silver Medals - Top 5 Countries") + labs( x = 'Silver Medals' ,y = 'Countries')
+
+#3. GGPLOT - Countries by Bronze
+
+fig_6 = ggplot(data = head(bronze_medal_by_countries_21st,5)) + geom_bar(mapping = aes(x = Country, y = reorder(NOC,Country), fill= NOC), stat = 'identity') + ggtitle("Year 2002 - 2014 : Bronze Medals - Top 5 Countries") + labs( x = 'Bronze Medals' ,y = 'Countries')
+
+# Combine the plots using patchwork()
+fig_4 | fig_5 | fig_6
+
+```
+
+
+# ATHLETE ANALYSIS - OVERALL
+
+```{r}
+
+str(winter_subset_2)
+
+# Athletes participation(M/F) each year - Grouped by Year
+
+athlete_participation = winter_subset_2 %>% group_by(Year) %>% 
+  summarize('Male_Athletes' = sum(Sex == 'M'), 'Female_Athletes' = sum(Sex == 'F'))
+
+View(athlete_participation)
+
+
+# Scatter Plot : Year- Athlete Participation
+#?geom_point
+
+# MALE ATHLETES vs YEAR
+SP_1 = ggplot(athlete_participation) +
+geom_point(mapping = aes(x = Male_Athletes , y = Year),  size = 5 , pch = 20, color = 'red') + ggtitle("Scatter Plot : Male Athletes vs Year") + xlim(80,340)
+
+# FEMALE ATHLETES vs YEAR
+SP_2 = ggplot(athlete_participation) +
+geom_point(mapping = aes(x = Female_Athletes , y = Year),   size = 5 , pch = 20, color = 'darkblue') + ggtitle("Scatter Plot : Female Athletes vs Year") + xlim(5,270)
+
+# COMBINING PLOTS using patchwork()
+SP_1 | SP_2
+
+```
+
+# ATHLETE - SPORT PARTICIPATION ANALYSIS - 20TH and 21st Century - To determine Sport Popularity
+
+```{r}
+
+# athlete sport participation - 20th century
+athlete_sport_participation_20th = twentieth_century %>% group_by(Sport) %>% 
+  summarize(Number_of_Athletes = n_distinct(ID)) %>% arrange(desc(Number_of_Athletes))
+View(athlete_sport_participation_20th)
+ 
+# athlete sport participation - 21st century
+athlete_sport_participation_21st = twenty_first_century %>% group_by(Sport) %>% 
+  summarize(Number_of_Athletes = n_distinct(ID)) %>% arrange(desc(Number_of_Athletes))
+View(athlete_sport_participation_21st)
+
+## TREE MAP 
+# Heat Map - Athlete per Sport - 20th Century
+TM_1 = ggplot(athlete_sport_participation_20th, aes(area = Number_of_Athletes, fill = Sport, label = paste(Sport,Number_of_Athletes, sep = '\n'))) + geom_treemap() + geom_treemap_text(colour = "white",place = "centre", size = 20) + theme(legend.position = "none") + labs(title=" 20th Century : Athletes per Sport")  
+
+# Heat Map - Athlete per Sport - 2stth Century
+TM_2 = ggplot(athlete_sport_participation_21st, aes(area = Number_of_Athletes, fill = Sport, label = paste(Sport,Number_of_Athletes, sep = '\n'))) + geom_treemap() + geom_treemap_text(colour = "white", place = "centre", size = 20) + theme(legend.position = "none") + labs(title=" 21st Century : Athletes per Sport")  
+
+TM_1 | TM_2
+
+```
+
+# DISTINCT SPORTS 
+```{r}
+sports_20th = twentieth_century %>% group_by(Sport) %>% 
+  summarize(Events = n_distinct(Event)) %>% arrange(desc(Events))
+sports_20th
+
+sports_21st = twenty_first_century %>% group_by(Sport) %>% 
+  summarize(Events = n_distinct(Event)) %>% arrange(desc(Events))
+sports_21st
+
+```
