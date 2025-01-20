@@ -1,7 +1,29 @@
-# Winter-Olympics-Data-Analysis
+# Winter Olympics Analysis: Pre and Post 21st Century
 
-The Winter Olympics have grown in popularity since their inception in 1924. After starting with only five sports, several new sports have been added to the Olympic programme since 1992, broadening
-the appeal of the Winter Olympics beyond Europe and North America. From 1924 to 1936, the games were held every four years, but were interrupted by World War II in 1940 and 1944 and were later resumed in 1948. Initially, since 1992 the summer and the winter Olympics were held in the same year. But in 1986, The International Olympic Committee (IOC) ruled that Summer and Winter Olympics will be held on separate four-year cycles in alternating even-numbered years. 
+## Overview
+This project analyzes the evolution of the Winter Olympics, focusing on:
+  - Country performance trends in the 20th and 21st centuries.
+  - Gender representation and the rise of female athlete participation.
+  - Popularity of sports based on athlete involvement.
 
-As an avid sports fan, I had been following the Summer Olympics since I was a child, but I had little knowledge of the Winter Olympics. This inspired me to investigate and analyse the Winter Olympics,
-the participation and performances of various athletes and countries in each season, and the various sports played during each event.
+The study leverages data analysis and visualization techniques in R to uncover key insights into the history and development of the Winter Olympics.
+
+## Key Highlights
+
+  - Top-performing Countries: Soviet Union (20th century) and Canada (21st century).
+  - Gender Trends: Steady growth in female participation, nearly matching male participation by 2010.
+  - Sport Popularity: Ice Hockey is the most popular sport; Skeleton remains the least.
+
+## Tools & Technologies
+
+  - R Programming: Used for data preprocessing, analysis, and visualization.
+  - Key Libraries: dplyr, ggplot2, tidyverse, treemapify
+
+## Repository Contents
+
+  - Report: The detailed analysis and findings are available in the uploaded PDF report.
+  - Code: RMD file consists of the code used for data cleaning, analysis, and visualizations.
+
+## Acknowledgments
+  - Data sourced from Kaggle.
+  - Original scraping credit: Randi H. Griffin.
