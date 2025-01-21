@@ -14,11 +14,6 @@ The study leverages data analysis and visualization techniques in R to uncover k
   - Gender Trends: Steady growth in female participation, nearly matching male participation by 2010.
   - Sport Popularity: Ice Hockey is the most popular sport; Skeleton remains the least.
 
-## Tools & Technologies
-
-  - R Programming: Used for data preprocessing, analysis, and visualization.
-  - Key Libraries: dplyr, ggplot2, tidyverse, treemapify
-
 ## Repository Contents
 
   - Report: The detailed analysis and findings are available in the uploaded PDF report.
